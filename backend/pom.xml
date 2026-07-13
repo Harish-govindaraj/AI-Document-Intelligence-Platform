@@ -11,7 +11,7 @@
 	<groupId>com.docmind</groupId>
 	<artifactId>backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
+	<name>DocMind Backend</name>
 	<description/>
 	<url/>
 	<licenses>
