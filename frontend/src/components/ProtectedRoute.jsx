@@ -3,9 +3,9 @@ import authService from "../services/authService";
 
 export default function ProtectedRoute({ children }) {
 
-    if (!authService.isLoggedIn()) {
+    if (!authService.isAuthenticated()) {
 
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
 
     }
 

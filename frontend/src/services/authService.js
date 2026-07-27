@@ -2,37 +2,23 @@ import api from "../api/api";
 
 const authService = {
 
-    async login(credentials) {
+    async register(user) {
 
-        const response = await api.post(
-
-            "/api/auth/login",
-
-            credentials
-
-        );
-
-        localStorage.setItem(
-
-            "token",
-
-            response.data.token
-
-        );
+        const response = await api.post("/auth/register", user);
 
         return response.data;
 
     },
 
-    async register(user) {
+    async login(credentials) {
 
-        const response = await api.post(
+        const response = await api.post("/auth/login", credentials);
 
-            "/api/auth/register",
+        if (response.data.token) {
 
-            user
+            localStorage.setItem("token", response.data.token);
 
-        );
+        }
 
         return response.data;
 
@@ -44,15 +30,9 @@ const authService = {
 
     },
 
-    isLoggedIn() {
+    isAuthenticated() {
 
-        return !!localStorage.getItem("token");
-
-    },
-
-    getToken() {
-
-        return localStorage.getItem("token");
+        return localStorage.getItem("token") !== null;
 
     }
 

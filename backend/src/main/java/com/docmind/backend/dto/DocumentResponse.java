@@ -25,4 +25,11 @@ public class DocumentResponse {
 
     private LocalDateTime uploadedAt;
 
+    // AI Results
+    private String summary;
+
+    private String keywords;
+
+    private String entities;
+
 }

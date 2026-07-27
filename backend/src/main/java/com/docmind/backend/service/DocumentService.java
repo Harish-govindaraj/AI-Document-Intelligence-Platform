@@ -108,27 +108,42 @@ public class DocumentService {
     /**
      * Get all documents of current user
      */
-    public List<DocumentResponse> getAllDocuments() {
+    /**
+ * Get all documents of current user
+ */
+     public List<DocumentResponse> getAllDocuments() {
 
-        User currentUser = getCurrentUser();
+    User currentUser = getCurrentUser();
 
-        return documentRepository.findByUser(currentUser)
+    return documentRepository.findByUser(currentUser)
 
-                .stream()
+            .stream()
 
-                .map(document -> DocumentResponse.builder()
+            .map(document -> DocumentResponse.builder()
 
-                        .id(document.getId())
-                        .originalFileName(document.getOriginalFileName())
-                        .fileType(document.getFileType())
-                        .fileSize(document.getFileSize())
-                        .status(document.getStatus())
-                        .uploadedAt(document.getUploadedAt())
+                    .id(document.getId())
 
-                        .build())
+                    .originalFileName(document.getOriginalFileName())
 
-                .toList();
-    }
+                    .fileType(document.getFileType())
+
+                    .fileSize(document.getFileSize())
+
+                    .status(document.getStatus())
+
+                    .uploadedAt(document.getUploadedAt())
+
+                    // AI Results
+                    .summary(document.getSummary())
+
+                    .keywords(document.getKeywords())
+
+                    .entities(document.getEntities())
+
+                    .build())
+
+            .toList();
+       }
 
     /**
      * Get one document (only if it belongs to current user)
@@ -145,15 +160,18 @@ public class DocumentService {
                         new RuntimeException("Document not found."));
 
         return DocumentResponse.builder()
+        .id(document.getId())
+        .originalFileName(document.getOriginalFileName())
+        .fileType(document.getFileType())
+        .fileSize(document.getFileSize())
+        .status(document.getStatus())
+        .uploadedAt(document.getUploadedAt())
 
-                .id(document.getId())
-                .originalFileName(document.getOriginalFileName())
-                .fileType(document.getFileType())
-                .fileSize(document.getFileSize())
-                .status(document.getStatus())
-                .uploadedAt(document.getUploadedAt())
+        .summary(document.getSummary())
+        .keywords(document.getKeywords())
+        .entities(document.getEntities())
 
-                .build();
+        .build();
     }
 
     /**

@@ -1,136 +1,268 @@
-import { useState } from "react";
-import Navbar from "../components/Navbar";
+import { useEffect, useState } from "react";
+import MainLayout from "../layouts/MainLayout";
+import LoadingSpinner from "../components/LoadingSpinner";
+import EmptyState from "../components/EmptyState";
+import PageHeader from "../components/PageHeader";
+import StatusBadge from "../components/StatusBadge";
+import useDocuments from "../hooks/useDocuments";
+import { formatDate, formatSize } from "../utils/formatters";
 
 export default function History() {
+    const { documents, loading, error, setError, removeDocument } = useDocuments();
+    const [filteredDocuments, setFilteredDocuments] = useState([]);
+    const [search, setSearch] = useState("");
+    const [selectedDocument, setSelectedDocument] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
-    const [documents] = useState([
+    useEffect(() => {
+        const query = search.toLowerCase();
+        const results = documents.filter((document) => {
+            const filename = (document.originalFileName || "").toLowerCase();
+            const type = (document.fileType || "").toLowerCase();
+            const status = (document.status || "").toLowerCase();
+            return filename.includes(query) || type.includes(query) || status.includes(query);
+        });
 
-        {
-            id: 1,
-            fileName: "Resume.pdf",
-            fileType: "PDF",
-            status: "Processed",
-            uploadedAt: "Today"
-        },
+        setFilteredDocuments(results);
+    }, [search, documents]);
 
-        {
-            id: 2,
-            fileName: "Invoice.pdf",
-            fileType: "PDF",
-            status: "Processed",
-            uploadedAt: "Yesterday"
-        },
-
-        {
-            id: 3,
-            fileName: "Screenshot.png",
-            fileType: "Image",
-            status: "Processed",
-            uploadedAt: "2 Days Ago"
+    const handleDelete = async (id) => {
+        const confirmed = window.confirm("Are you sure you want to delete this document?");
+        if (!confirmed) {
+            return;
         }
 
-    ]);
+        try {
+            setDeletingId(id);
+            const success = await removeDocument(id);
+            if (success) {
+                setFilteredDocuments((current) => current.filter((document) => document.id !== id));
+                if (selectedDocument?.id === id) {
+                    setSelectedDocument(null);
+                }
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || "Unable to delete document.");
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     return (
-
-        <>
-            <Navbar />
-
-            <div className="container mt-4">
-
-                <div className="card shadow border-0">
-
-                    <div className="card-body">
-
-                        <div className="d-flex justify-content-between align-items-center">
-
-                            <h3>My Documents</h3>
-
-                            <input
-                                className="form-control w-25"
-                                placeholder="Search..."
-                            />
-
-                        </div>
-
-                        <hr />
-
-                        <table className="table table-hover align-middle">
-
-                            <thead className="table-dark">
-
-                                <tr>
-
-                                    <th>#</th>
-
-                                    <th>Filename</th>
-
-                                    <th>Type</th>
-
-                                    <th>Status</th>
-
-                                    <th>Uploaded</th>
-
-                                    <th>Action</th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                {
-
-                                    documents.map((doc, index) => (
-
-                                        <tr key={doc.id}>
-
-                                            <td>{index + 1}</td>
-
-                                            <td>{doc.fileName}</td>
-
-                                            <td>{doc.fileType}</td>
-
-                                            <td>
-
-                                                <span className="badge bg-success">
-
-                                                    {doc.status}
-
-                                                </span>
-
-                                            </td>
-
-                                            <td>{doc.uploadedAt}</td>
-
-                                            <td>
-
-                                                <button
-                                                    className="btn btn-outline-primary btn-sm"
-                                                >
-                                                    View
-                                                </button>
-
-                                            </td>
-
-                                        </tr>
-
-                                    ))
-
-                                }
-
-                            </tbody>
-
-                        </table>
-
+        <MainLayout>
+            <PageHeader
+                title="Document history"
+                description="Search, review, and manage your uploaded documents."
+                action={
+                    <div className="w-100 w-lg-25">
+                        <label className="visually-hidden" htmlFor="history-search">Search documents</label>
+                        <input
+                            id="history-search"
+                            type="text"
+                            className="form-control"
+                            placeholder="Search filename, type, status"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                        />
                     </div>
+                }
+            />
 
+            {error && <div className="alert alert-danger rounded-3">{error}</div>}
+
+            {loading ? (
+                <div className="card border-0 shadow-sm rounded-4">
+                    <div className="card-body p-5">
+                        <LoadingSpinner />
+                    </div>
                 </div>
+            ) : filteredDocuments.length === 0 ? (
+                <EmptyState
+                    title="No documents found"
+                    description="No records match your current search. Try a different keyword or clear the filter."
+                />
+            ) : (
+                <div className="card border-0 shadow-sm rounded-4">
+                    <div className="card-body p-0">
+                        <div className="table-responsive">
+                            <table className="table align-middle mb-0" aria-label="Document history">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Filename</th>
+                                        <th>Type</th>
+                                        <th>Size</th>
+                                        <th>Status</th>
+                                        <th>Uploaded Time</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredDocuments.map((document) => (
+                                        <tr key={document.id}>
+                                            <td className="fw-semibold">{document.originalFileName}</td>
+                                            <td>{document.fileType || "Unknown"}</td>
+                                            <td>{formatSize(document.fileSize)}</td>
+                                            <td>
+                                                <StatusBadge status={document.status} />
+                                            </td>
+                                            <td className="text-muted">{formatDate(document.uploadedAt)}</td>
+                                            <td>
+                                                <div className="d-flex gap-2">
+                                                    <button
+                                                        className="btn btn-outline-primary btn-sm"
+                                                        onClick={() => setSelectedDocument(document)}
+                                                    >
+                                                        View
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-outline-danger btn-sm"
+                                                        onClick={() => handleDelete(document.id)}
+                                                        disabled={deletingId === document.id}
+                                                    >
+                                                        {deletingId === document.id ? "Deleting..." : "Delete"}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-            </div>
+            {selectedDocument && (
+                <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                    <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+                        <div className="modal-content rounded-4 border-0">
+                            <div className="modal-header">
+                                <div>
+                                    <h5 className="modal-title">{selectedDocument.originalFileName}</h5>
+                                    <p className="text-muted small mb-0">Document insights</p>
+                                </div>
+                                <button type="button" className="btn-close" onClick={() => setSelectedDocument(null)}></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="mb-4">
+                                    <h6 className="fw-semibold">Filename</h6>
+                                    <p className="mb-0">{selectedDocument.originalFileName}</p>
+                                </div>
 
-        </>
+                                <div className="card border-0 shadow-sm rounded-4 mb-3">
+                                    <div className="card-body">
+                                        <h6 className="fw-semibold mb-2">Summary</h6>
+                                        <p className="mb-0">{selectedDocument.summary || "No summary available."}</p>
+                                    </div>
+                                </div>
 
+                                <div className="card border-0 shadow-sm rounded-4 mb-3">
+                                    <div className="card-body">
+                                        <h6 className="fw-semibold mb-2">Keywords</h6>
+                                        <div className="d-flex flex-wrap gap-2">
+
+                                            {Array.isArray(selectedDocument.keywords)
+
+                                                ? selectedDocument.keywords.map((keyword, index) => (
+
+                                                    <span
+                                                        key={index}
+                                                        className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"
+                                                    >
+                                                        {keyword}
+                                                    </span>
+
+                                                ))
+
+                                                : selectedDocument.keywords
+
+                                                    ? selectedDocument.keywords
+
+                                                        .split(",")
+
+                                                        .map((keyword, index) => (
+
+                                                            <span
+                                                                key={index}
+                                                                className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"
+                                                            >
+                                                                {keyword.trim()}
+                                                            </span>
+
+                                                        ))
+
+                                                    : <span className="text-muted small">No keywords available.</span>
+
+                                            }
+
+                                            </div>
+                                    </div>
+                                </div>
+
+                                <div className="card border-0 shadow-sm rounded-4">
+                                    <div className="card-body">
+                                        <h6 className="fw-semibold mb-2">Entities</h6>
+                                       {Array.isArray(selectedDocument.entities)
+
+                                            ? (
+
+                                                <table className="table table-sm">
+
+                                                    <tbody>
+
+                                                        {selectedDocument.entities.map((entity, index) => (
+
+                                                            <tr key={index}>
+
+                                                                <td>{entity.text}</td>
+
+                                                                <td>{entity.label}</td>
+
+                                                            </tr>
+
+                                                        ))}
+
+                                                    </tbody>
+
+                                                </table>
+
+                                            )
+
+                                            : selectedDocument.entities
+
+                                                ? (
+
+                                                    <div className="d-flex flex-column gap-2">
+
+                                                        {selectedDocument.entities
+
+                                                            .split(",")
+
+                                                            .map((entity, index) => (
+
+                                                                <div
+                                                                    key={index}
+                                                                    className="border rounded-3 p-2 bg-light"
+                                                                >
+                                                                    {entity.trim()}
+                                                                </div>
+
+                                                            ))}
+
+                                                    </div>
+
+                                                )
+
+                                                : <span className="text-muted small">No entities available.</span>
+
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </MainLayout>
     );
-
 }

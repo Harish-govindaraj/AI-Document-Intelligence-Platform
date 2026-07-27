@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -11,49 +11,61 @@ function App() {
 
     return (
 
-        <BrowserRouter>
+        <Routes>
 
-            <Routes>
+            {/* Redirect Root */}
+            <Route
+                path="/"
+                element={<Navigate to="/login" replace />}
+            />
 
-                <Route path="/" element={<Login />} />
+            {/* Public Routes */}
+            <Route
+                path="/login"
+                element={<Login />}
+            />
 
-                <Route path="/register" element={<Register />} />
+            <Route
+                path="/register"
+                element={<Register />}
+            />
 
-                <Route
-                    path="/dashboard"
-                    element={
-                        <ProtectedRoute>
-                            <Dashboard />
-                        </ProtectedRoute>
-                    }
-                />
+            {/* Protected Routes */}
 
-                <Route
-                    path="/upload"
-                    element={
-                        <ProtectedRoute>
-                            <Upload />
-                        </ProtectedRoute>
-                    }
-                />
+            <Route
+                path="/dashboard"
+                element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                }
+            />
 
-                <Route
-                    path="/history"
-                    element={
-                        <ProtectedRoute>
-                            <History />
-                        </ProtectedRoute>
-                    }
-                />
+            <Route
+                path="/upload"
+                element={
+                    <ProtectedRoute>
+                        <Upload />
+                    </ProtectedRoute>
+                }
+            />
 
-                <Route
-                    path="*"
-                    element={<Navigate to="/" replace />}
-                />
+            <Route
+                path="/history"
+                element={
+                    <ProtectedRoute>
+                        <History />
+                    </ProtectedRoute>
+                }
+            />
 
-            </Routes>
+            {/* Invalid Routes */}
+            <Route
+                path="*"
+                element={<Navigate to="/login" replace />}
+            />
 
-        </BrowserRouter>
+        </Routes>
 
     );
 

@@ -1,0 +1,139 @@
+:root {
+  color-scheme: light;
+  --bg-primary: #f4f7fb;
+  --bg-surface: #ffffff;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border-soft: #e2e8f0;
+  --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #f8fbff 0%, var(--bg-primary) 100%);
+  color: var(--text-primary);
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.card {
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+.btn {
+  border-radius: 999px;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-weight: 600;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+}
+
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-danger {
+  background-color: #fff;
+}
+
+.form-control,
+.form-select {
+  border-radius: 0.9rem;
+  border: 1px solid var(--border-soft);
+  padding: 0.7rem 0.9rem;
+  background-color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.16);
+}
+
+.table {
+  color: var(--text-primary);
+}
+
+.table thead th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background-color: #f8fafc;
+}
+
+.table td,
+.table th {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.badge {
+  font-weight: 600;
+  padding: 0.45em 0.7em;
+}
+
+.navbar {
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.nav-link {
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.nav-link:hover {
+  color: #2563eb !important;
+}
+
+.alert {
+  border-radius: 1rem;
+  border: 0;
+}
+
+.modal-content {
+  border-radius: 1.25rem;
+}
+
+.container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
