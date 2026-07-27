@@ -1,116 +1,200 @@
 package com.docmind.backend.service;
 
 import com.docmind.backend.dto.AIProcessResponse;
+import com.docmind.backend.dto.DocumentResponse;
 import com.docmind.backend.dto.UploadResponse;
 import com.docmind.backend.entity.Document;
+import com.docmind.backend.entity.User;
 import com.docmind.backend.repository.DocumentRepository;
+import com.docmind.backend.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class DocumentService {
 
     private final DocumentRepository documentRepository;
+    private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
     private final ValidationService validationService;
     private final AIService aiService;
 
-    public DocumentService(DocumentRepository documentRepository,
-                           FileStorageService fileStorageService,
-                           ValidationService validationService,
-                           AIService aiService) {
+    public DocumentService(
+            DocumentRepository documentRepository,
+            UserRepository userRepository,
+            FileStorageService fileStorageService,
+            ValidationService validationService,
+            AIService aiService) {
 
         this.documentRepository = documentRepository;
+        this.userRepository = userRepository;
         this.fileStorageService = fileStorageService;
         this.validationService = validationService;
         this.aiService = aiService;
     }
 
+    /**
+     * Upload Document
+     */
     public UploadResponse uploadDocument(MultipartFile file) {
 
-    // Step 1 - Validate file
-    validationService.validateFile(file);
+        // Step 1 - Validate
+        validationService.validateFile(file);
 
-    // Step 2 - Store file
-    String filePath = fileStorageService.storeFile(file);
+        // Step 2 - Store File
+        String filePath = fileStorageService.storeFile(file);
 
-    // Step 3 - Create Document Entity
-    Document document = new Document();
+        // Step 3 - Logged-in User
+        User currentUser = getCurrentUser();
 
-    document.setFileName(Paths.get(filePath).getFileName().toString());
-    document.setOriginalFileName(file.getOriginalFilename());
-    document.setFileType(file.getContentType());
-    document.setFileSize(file.getSize());
-    document.setFilePath(filePath);
-    document.setStatus("UPLOADED");
-    document.setUploadedAt(LocalDateTime.now());
+        // Step 4 - Create Document
+        Document document = new Document();
 
-    // Step 4 - Save document metadata
-    Document savedDocument = documentRepository.save(document);
+        document.setFileName(Paths.get(filePath).getFileName().toString());
+        document.setOriginalFileName(file.getOriginalFilename());
+        document.setFileType(file.getContentType());
+        document.setFileSize(file.getSize());
+        document.setFilePath(filePath);
+        document.setStatus("UPLOADED");
+        document.setUploadedAt(LocalDateTime.now());
+        document.setUser(currentUser);
 
-    // Step 5 - Send file to AI Service
-    AIProcessResponse aiResponse = aiService.processDocument(file);
+        // Step 5 - Save Metadata
+        Document savedDocument = documentRepository.save(document);
 
-    // Step 6 - Save AI Results
-    savedDocument.setSummary(aiResponse.getSummary());
+        // Step 6 - AI Processing
+        AIProcessResponse aiResponse = aiService.processDocument(file);
 
-    savedDocument.setKeywords(
-            String.join(", ", aiResponse.getKeywords())
-    );
+        savedDocument.setSummary(aiResponse.getSummary());
 
-    savedDocument.setEntities(
-            aiResponse.getEntities()
-                    .stream()
-                    .map(entity ->
-                            entity.getText() + " (" + entity.getLabel() + ")")
-                    .reduce((a, b) -> a + ", " + b)
-                    .orElse("")
-    );
+        savedDocument.setKeywords(
+                String.join(", ", aiResponse.getKeywords())
+        );
 
-    documentRepository.save(savedDocument);
+        savedDocument.setEntities(
+                aiResponse.getEntities()
+                        .stream()
+                        .map(entity ->
+                                entity.getText() + " (" + entity.getLabel() + ")")
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("")
+        );
 
-    // Step 7 - Debug Output
-    System.out.println("\n========== AI RESULT ==========");
+        documentRepository.save(savedDocument);
 
-    System.out.println("\nSUMMARY:");
-    System.out.println(aiResponse.getSummary());
+        return new UploadResponse(
 
-    System.out.println("\nKEYWORDS:");
-    aiResponse.getKeywords().forEach(System.out::println);
+                savedDocument.getId(),
+                savedDocument.getOriginalFileName(),
+                savedDocument.getFileType(),
+                savedDocument.getFileSize(),
+                savedDocument.getStatus(),
+                savedDocument.getUploadedAt(),
+                aiResponse.getSummary(),
+                aiResponse.getKeywords(),
+                aiResponse.getEntities(),
+                "Document uploaded successfully."
+        );
+    }
 
-    System.out.println("\nENTITIES:");
-    aiResponse.getEntities().forEach(entity ->
-            System.out.println(entity.getText() + " -> " + entity.getLabel())
-    );
+    /**
+     * Get all documents of current user
+     */
+    public List<DocumentResponse> getAllDocuments() {
 
-    System.out.println("\n===============================");
+        User currentUser = getCurrentUser();
 
-    // Step 8 - Return Response
-    return new UploadResponse(
+        return documentRepository.findByUser(currentUser)
 
-            savedDocument.getId(),
+                .stream()
 
-            savedDocument.getOriginalFileName(),
+                .map(document -> DocumentResponse.builder()
 
-            savedDocument.getFileType(),
+                        .id(document.getId())
+                        .originalFileName(document.getOriginalFileName())
+                        .fileType(document.getFileType())
+                        .fileSize(document.getFileSize())
+                        .status(document.getStatus())
+                        .uploadedAt(document.getUploadedAt())
 
-            savedDocument.getFileSize(),
+                        .build())
 
-            savedDocument.getStatus(),
+                .toList();
+    }
 
-            savedDocument.getUploadedAt(),
+    /**
+     * Get one document (only if it belongs to current user)
+     */
+    public DocumentResponse getDocument(Long id) {
 
-            aiResponse.getSummary(),
+        User currentUser = getCurrentUser();
 
-            aiResponse.getKeywords(),
+        Document document = documentRepository
 
-            aiResponse.getEntities(),
+                .findByIdAndUser(id, currentUser)
 
-            "Document uploaded successfully."
+                .orElseThrow(() ->
+                        new RuntimeException("Document not found."));
 
-    );
-   }
- }
+        return DocumentResponse.builder()
+
+                .id(document.getId())
+                .originalFileName(document.getOriginalFileName())
+                .fileType(document.getFileType())
+                .fileSize(document.getFileSize())
+                .status(document.getStatus())
+                .uploadedAt(document.getUploadedAt())
+
+                .build();
+    }
+
+    /**
+     * Delete document (only if it belongs to current user)
+     */
+    public void deleteDocument(Long id) {
+
+        User currentUser = getCurrentUser();
+
+        Document document = documentRepository
+
+                .findByIdAndUser(id, currentUser)
+
+                .orElseThrow(() ->
+                        new RuntimeException("Document not found."));
+
+        // Delete physical file
+        try {
+
+            Files.deleteIfExists(Path.of(document.getFilePath()));
+
+        } catch (Exception ignored) {
+
+        }
+
+        documentRepository.delete(document);
+    }
+
+    /**
+     * Get currently authenticated user
+     */
+    private User getCurrentUser() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        return userRepository.findByEmail(email)
+
+                .orElseThrow(() ->
+                        new RuntimeException("User not found."));
+    }
+}

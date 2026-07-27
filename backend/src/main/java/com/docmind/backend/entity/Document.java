@@ -38,6 +38,7 @@ public class Document {
 
     @Column(nullable = false)
     private LocalDateTime uploadedAt;
+
     @Column(columnDefinition = "TEXT")
     private String summary;
 
@@ -46,4 +47,10 @@ public class Document {
 
     @Column(columnDefinition = "TEXT")
     private String entities;
+
+    // Relationship with User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
 }
