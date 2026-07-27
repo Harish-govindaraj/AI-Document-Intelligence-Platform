@@ -29,15 +29,15 @@ public class DocumentService {
         this.aiService = aiService;
     }
 
-    public UploadResponse uploadDocument(MultipartFile file){
+    public UploadResponse uploadDocument(MultipartFile file) {
 
-    // Step 1
+    // Step 1 - Validate file
     validationService.validateFile(file);
 
-    // Step 2
+    // Step 2 - Store file
     String filePath = fileStorageService.storeFile(file);
 
-    // Step 3
+    // Step 3 - Create Document Entity
     Document document = new Document();
 
     document.setFileName(Paths.get(filePath).getFileName().toString());
@@ -48,29 +48,69 @@ public class DocumentService {
     document.setStatus("UPLOADED");
     document.setUploadedAt(LocalDateTime.now());
 
-    // Step 4
+    // Step 4 - Save document metadata
     Document savedDocument = documentRepository.save(document);
 
-    // ⭐ Step 5 - Call FastAPI
-    AIProcessResponse aiResponse =
-            aiService.processDocument(filePath);
+    // Step 5 - Send file to AI Service
+    AIProcessResponse aiResponse = aiService.processDocument(file);
 
-    // ⭐ Step 6 - Print AI Response
-    System.out.println("========== AI RESPONSE ==========");
-    System.out.println("Summary : " + aiResponse.getSummary());
-    System.out.println("Keywords: " + aiResponse.getKeywords());
-    System.out.println("Entities: " + aiResponse.getEntities());
-    System.out.println("=================================");
+    // Step 6 - Save AI Results
+    savedDocument.setSummary(aiResponse.getSummary());
 
-    // Step 7
-    return new UploadResponse(
-            savedDocument.getId(),
-            savedDocument.getOriginalFileName(),
-            savedDocument.getFileType(),
-            savedDocument.getFileSize(),
-            savedDocument.getStatus(),
-            savedDocument.getUploadedAt(),
-            "Document uploaded successfully."
+    savedDocument.setKeywords(
+            String.join(", ", aiResponse.getKeywords())
     );
-    }
+
+    savedDocument.setEntities(
+            aiResponse.getEntities()
+                    .stream()
+                    .map(entity ->
+                            entity.getText() + " (" + entity.getLabel() + ")")
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("")
+    );
+
+    documentRepository.save(savedDocument);
+
+    // Step 7 - Debug Output
+    System.out.println("\n========== AI RESULT ==========");
+
+    System.out.println("\nSUMMARY:");
+    System.out.println(aiResponse.getSummary());
+
+    System.out.println("\nKEYWORDS:");
+    aiResponse.getKeywords().forEach(System.out::println);
+
+    System.out.println("\nENTITIES:");
+    aiResponse.getEntities().forEach(entity ->
+            System.out.println(entity.getText() + " -> " + entity.getLabel())
+    );
+
+    System.out.println("\n===============================");
+
+    // Step 8 - Return Response
+    return new UploadResponse(
+
+            savedDocument.getId(),
+
+            savedDocument.getOriginalFileName(),
+
+            savedDocument.getFileType(),
+
+            savedDocument.getFileSize(),
+
+            savedDocument.getStatus(),
+
+            savedDocument.getUploadedAt(),
+
+            aiResponse.getSummary(),
+
+            aiResponse.getKeywords(),
+
+            aiResponse.getEntities(),
+
+            "Document uploaded successfully."
+
+    );
+   }
  }

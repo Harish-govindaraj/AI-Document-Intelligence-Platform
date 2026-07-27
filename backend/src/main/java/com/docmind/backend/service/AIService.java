@@ -1,38 +1,47 @@
 package com.docmind.backend.service;
 
-import com.docmind.backend.dto.AIProcessRequest;
 import com.docmind.backend.dto.AIProcessResponse;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 public class AIService {
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
 
-    @Value("${ai.service.url}")
-    private String aiServiceUrl;
-
-    public AIService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public AIService(WebClient webClient) {
+        this.webClient = webClient;
     }
 
-    public AIProcessResponse processDocument(String filePath){
+    public AIProcessResponse processDocument(MultipartFile file) {
 
-        AIProcessRequest request =
-                new AIProcessRequest(filePath);
+        try {
 
-        return restTemplate.postForObject(
+            MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
-                aiServiceUrl + "/process",
+            builder.part(
+                    "file",
+                    new ByteArrayResource(file.getBytes()) {
+                        @Override
+                        public String getFilename() {
+                            return file.getOriginalFilename();
+                        }
+                    });
 
-                request,
+            return webClient.post()
+                    .uri("/process")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .bodyValue(builder.build())
+                    .retrieve()
+                    .bodyToMono(AIProcessResponse.class)
+                    .block();
 
-                AIProcessResponse.class
-
-        );
-
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to communicate with AI Service.", e);
+        }
     }
-
 }

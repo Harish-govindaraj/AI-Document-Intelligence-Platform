@@ -38,4 +38,12 @@ public class Document {
 
     @Column(nullable = false)
     private LocalDateTime uploadedAt;
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+
+    @Column(columnDefinition = "TEXT")
+    private String keywords;
+
+    @Column(columnDefinition = "TEXT")
+    private String entities;
 }

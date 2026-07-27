@@ -11,10 +11,12 @@ public class AIProcessResponse {
 
     private String receivedFile;
 
+    private String text;
+
     private String summary;
 
-    private List<String> keywords;
+    private List<String> keywords;  
 
-    private List<String> entities;
+    private List<EntityResponse> entities;
 
-}   
+}
