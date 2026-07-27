@@ -54,24 +54,36 @@ export default function History() {
                 title="Document history"
                 description="Search, review, and manage your uploaded documents."
                 action={
-                    <div className="w-100 w-lg-25">
+                    <div className="w-100 w-lg-33">
                         <label className="visually-hidden" htmlFor="history-search">Search documents</label>
-                        <input
-                            id="history-search"
-                            type="text"
-                            className="form-control"
-                            placeholder="Search filename, type, status"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                        />
+                        <div className="input-group shadow-sm rounded-pill overflow-hidden border">
+                            <span className="input-group-text bg-white border-0 text-muted">
+                                <i className="bi bi-search"></i>
+                            </span>
+                            <input
+                                id="history-search"
+                                type="text"
+                                className="form-control border-0 ds-input"
+                                placeholder="Search filename, type, status"
+                                value={search}
+                                onChange={(event) => setSearch(event.target.value)}
+                            />
+                        </div>
                     </div>
                 }
             />
 
-            {error && <div className="alert alert-danger rounded-3">{error}</div>}
+            {error && (
+                <div className="alert alert-danger rounded-4 border-0 shadow-sm" role="alert">
+                    <div className="d-flex align-items-center gap-2">
+                        <i className="bi bi-exclamation-triangle"></i>
+                        <span>{error}</span>
+                    </div>
+                </div>
+            )}
 
             {loading ? (
-                <div className="card border-0 shadow-sm rounded-4">
+                <div className="card border-0 rounded-4 hero-panel">
                     <div className="card-body p-5">
                         <LoadingSpinner />
                     </div>
@@ -82,40 +94,48 @@ export default function History() {
                     description="No records match your current search. Try a different keyword or clear the filter."
                 />
             ) : (
-                <div className="card border-0 shadow-sm rounded-4">
+                <div className="card border-0 rounded-4 ds-card overflow-hidden">
                     <div className="card-body p-0">
                         <div className="table-responsive">
-                            <table className="table align-middle mb-0" aria-label="Document history">
-                                <thead className="table-light">
+                            <table className="table ds-table align-middle mb-0" aria-label="Document history">
+                                <thead>
                                     <tr>
-                                        <th>Filename</th>
-                                        <th>Type</th>
-                                        <th>Size</th>
-                                        <th>Status</th>
-                                        <th>Uploaded Time</th>
-                                        <th>Actions</th>
+                                        <th className="px-4 py-3">Filename</th>
+                                        <th className="px-4 py-3">Type</th>
+                                        <th className="px-4 py-3">Size</th>
+                                        <th className="px-4 py-3">Status</th>
+                                        <th className="px-4 py-3">Uploaded Time</th>
+                                        <th className="px-4 py-3">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredDocuments.map((document) => (
                                         <tr key={document.id}>
-                                            <td className="fw-semibold">{document.originalFileName}</td>
-                                            <td>{document.fileType || "Unknown"}</td>
-                                            <td>{formatSize(document.fileSize)}</td>
-                                            <td>
+                                            <td className="px-4 py-3 fw-semibold">
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div className="rounded-circle bg-primary-subtle p-2">
+                                                        <i className="bi bi-file-earmark-text text-primary"></i>
+                                                    </div>
+                                                    <span>{document.originalFileName}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">{document.fileType || "Unknown"}</td>
+                                            <td className="px-4 py-3">{formatSize(document.fileSize)}</td>
+                                            <td className="px-4 py-3">
                                                 <StatusBadge status={document.status} />
                                             </td>
-                                            <td className="text-muted">{formatDate(document.uploadedAt)}</td>
-                                            <td>
+                                            <td className="px-4 py-3 text-muted">{formatDate(document.uploadedAt)}</td>
+                                            <td className="px-4 py-3">
                                                 <div className="d-flex gap-2">
                                                     <button
-                                                        className="btn btn-outline-primary btn-sm"
+                                                        className="btn btn-outline-primary btn-sm ds-btn ds-btn-secondary"
                                                         onClick={() => setSelectedDocument(document)}
                                                     >
+                                                        <i className="bi bi-eye me-1"></i>
                                                         View
                                                     </button>
                                                     <button
-                                                        className="btn btn-outline-danger btn-sm"
+                                                        className="btn btn-outline-danger btn-sm ds-btn ds-btn-secondary"
                                                         onClick={() => handleDelete(document.id)}
                                                         disabled={deletingId === document.id}
                                                     >
@@ -135,127 +155,79 @@ export default function History() {
             {selectedDocument && (
                 <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
                     <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
-                        <div className="modal-content rounded-4 border-0">
-                            <div className="modal-header">
+                        <div className="modal-content rounded-4 border-0 overflow-hidden">
+                            <div className="modal-header border-0 pb-0">
                                 <div>
-                                    <h5 className="modal-title">{selectedDocument.originalFileName}</h5>
-                                    <p className="text-muted small mb-0">Document insights</p>
+                                    <div className="section-pill mb-2">Document insights</div>
+                                    <h5 className="modal-title fw-semibold">{selectedDocument.originalFileName}</h5>
+                                    <p className="text-muted small mb-0">Review the extracted AI results for this document.</p>
                                 </div>
                                 <button type="button" className="btn-close" onClick={() => setSelectedDocument(null)}></button>
                             </div>
-                            <div className="modal-body">
-                                <div className="mb-4">
-                                    <h6 className="fw-semibold">Filename</h6>
-                                    <p className="mb-0">{selectedDocument.originalFileName}</p>
+                            <div className="modal-body p-4 pt-2">
+                                <div className="card border-0 rounded-4 mb-3 hero-panel">
+                                    <div className="card-body">
+                                        <div className="d-flex justify-content-between align-items-start gap-3">
+                                            <div>
+                                                <h6 className="fw-semibold mb-2">Filename</h6>
+                                                <p className="mb-0">{selectedDocument.originalFileName}</p>
+                                            </div>
+                                            <span className="badge bg-primary-subtle text-primary rounded-pill">AI output</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="card border-0 shadow-sm rounded-4 mb-3">
+                                <div className="card border-0 rounded-4 mb-3 bg-white/80">
                                     <div className="card-body">
                                         <h6 className="fw-semibold mb-2">Summary</h6>
                                         <p className="mb-0">{selectedDocument.summary || "No summary available."}</p>
                                     </div>
                                 </div>
 
-                                <div className="card border-0 shadow-sm rounded-4 mb-3">
+                                <div className="card border-0 rounded-4 mb-3 bg-white/80">
                                     <div className="card-body">
                                         <h6 className="fw-semibold mb-2">Keywords</h6>
                                         <div className="d-flex flex-wrap gap-2">
-
                                             {Array.isArray(selectedDocument.keywords)
-
                                                 ? selectedDocument.keywords.map((keyword, index) => (
-
-                                                    <span
-                                                        key={index}
-                                                        className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"
-                                                    >
+                                                    <span key={index} className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
                                                         {keyword}
                                                     </span>
-
                                                 ))
-
                                                 : selectedDocument.keywords
-
-                                                    ? selectedDocument.keywords
-
-                                                        .split(",")
-
-                                                        .map((keyword, index) => (
-
-                                                            <span
-                                                                key={index}
-                                                                className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2"
-                                                            >
-                                                                {keyword.trim()}
-                                                            </span>
-
-                                                        ))
-
-                                                    : <span className="text-muted small">No keywords available.</span>
-
-                                            }
-
-                                            </div>
+                                                    ? selectedDocument.keywords.split(",").map((keyword, index) => (
+                                                        <span key={index} className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+                                                            {keyword.trim()}
+                                                        </span>
+                                                    ))
+                                                    : <span className="text-muted small">No keywords available.</span>}
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="card border-0 shadow-sm rounded-4">
+                                <div className="card border-0 rounded-4 bg-white/80">
                                     <div className="card-body">
                                         <h6 className="fw-semibold mb-2">Entities</h6>
-                                       {Array.isArray(selectedDocument.entities)
-
-                                            ? (
-
-                                                <table className="table table-sm">
-
-                                                    <tbody>
-
-                                                        {selectedDocument.entities.map((entity, index) => (
-
-                                                            <tr key={index}>
-
-                                                                <td>{entity.text}</td>
-
-                                                                <td>{entity.label}</td>
-
-                                                            </tr>
-
-                                                        ))}
-
-                                                    </tbody>
-
-                                                </table>
-
-                                            )
-
-                                            : selectedDocument.entities
-
-                                                ? (
-
-                                                    <div className="d-flex flex-column gap-2">
-
-                                                        {selectedDocument.entities
-
-                                                            .split(",")
-
-                                                            .map((entity, index) => (
-
-                                                                <div
-                                                                    key={index}
-                                                                    className="border rounded-3 p-2 bg-light"
-                                                                >
-                                                                    {entity.trim()}
-                                                                </div>
-
-                                                            ))}
-
+                                        {Array.isArray(selectedDocument.entities) ? (
+                                            <div className="row g-2">
+                                                {selectedDocument.entities.map((entity, index) => (
+                                                    <div key={index} className="col-12 col-sm-6">
+                                                        <div className="border rounded-3 p-3 bg-light h-100">
+                                                            <div className="fw-semibold small">{entity.text}</div>
+                                                            <div className="text-muted small">{entity.label}</div>
+                                                        </div>
                                                     </div>
-
-                                                )
-
-                                                : <span className="text-muted small">No entities available.</span>
-
-                                        }
+                                                ))}
+                                            </div>
+                                        ) : selectedDocument.entities ? (
+                                            <div className="d-flex flex-column gap-2">
+                                                {selectedDocument.entities.split(",").map((entity, index) => (
+                                                    <div key={index} className="border rounded-3 p-2 bg-light">
+                                                        {entity.trim()}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : <span className="text-muted small">No entities available.</span>}
                                     </div>
                                 </div>
                             </div>

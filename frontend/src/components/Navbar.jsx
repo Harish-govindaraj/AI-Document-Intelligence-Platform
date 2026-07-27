@@ -16,11 +16,11 @@ export default function Navbar() {
     ];
 
     return (
-        <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top border-bottom">
+        <nav className="navbar navbar-expand-lg sticky-top border-bottom">
             <div className="container">
-                <NavLink className="navbar-brand fw-bold d-flex align-items-center gap-2" to="/dashboard">
-                    <span className="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style={{ width: "38px", height: "38px" }}>
-                        🧠
+                <NavLink className="navbar-brand fw-bold d-flex align-items-center gap-2 me-4" to="/dashboard">
+                    <span className="brand-mark">
+                        <i className="bi bi-cpu"></i>
                     </span>
                     <span className="text-dark">DocMind AI</span>
                 </NavLink>
@@ -42,7 +42,7 @@ export default function Navbar() {
                         {navLinks.map((link) => (
                             <li className="nav-item" key={link.to}>
                                 <NavLink
-                                    className={({ isActive }) => `nav-link px-3 py-2 rounded-pill fw-semibold ${isActive ? "text-primary bg-primary-subtle" : "text-muted"}`}
+                                    className={({ isActive }) => `nav-link px-3 py-2 fw-semibold ${isActive ? "text-primary" : "text-muted"}`}
                                     to={link.to}
                                 >
                                     {link.label}

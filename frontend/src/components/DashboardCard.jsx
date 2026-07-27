@@ -8,13 +8,13 @@ export default function DashboardCard({ title, value, icon, color = "primary" })
     };
 
     return (
-        <div className="card border-0 shadow-sm rounded-4 h-100 dashboard-card">
+        <div className="card border-0 ds-card h-100 dashboard-card">
             <div className="card-body p-4">
                 <div className="d-flex align-items-center justify-content-between mb-3">
                     <div className={`rounded-circle p-3 ${colorClasses[color] || colorClasses.primary}`}>
                         <span className="fs-4">{icon}</span>
                     </div>
-                    <span className={`badge ${colorClasses[color] || colorClasses.primary} rounded-pill`}>
+                    <span className={`badge ds-badge ${colorClasses[color] || colorClasses.primary}`}>
                         Live
                     </span>
                 </div>
