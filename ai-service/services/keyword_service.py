@@ -1,28 +1,37 @@
-import yake
+from keybert import KeyBERT
+import time
 
 
 class KeywordService:
 
     def __init__(self):
 
-        self.extractor = yake.KeywordExtractor(
+        print("Loading KeyBERT model...")
 
-            lan="en",
+        self.model = KeyBERT("all-MiniLM-L6-v2")
 
-            n=2,
-
-            dedupLim=0.9,
-
-            top=10
-
-        )
+        print("KeyBERT model loaded successfully.")
 
     def extract_keywords(self, text: str):
 
-        if not text.strip():
+        if not text or not text.strip():
             return []
 
-        keywords = self.extractor.extract_keywords(text)
+        # Limit OCR text for better performance
+        text = text[:1000]
+
+        start = time.time()
+
+        print("Starting KeyBERT extraction...")
+
+        keywords = self.model.extract_keywords(
+            text,
+            keyphrase_ngram_range=(1, 2),
+            stop_words="english",
+            top_n=10
+        )
+
+        print(f"KeyBERT completed in {time.time() - start:.2f} sec")
 
         return [keyword for keyword, score in keywords]
 

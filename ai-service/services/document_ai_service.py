@@ -1,3 +1,5 @@
+import time
+
 from services.pdf_service import PDFService
 from services.ocr_service import ocr_service
 from services.summary_service import summary_service
@@ -10,7 +12,11 @@ class DocumentAIService:
     @staticmethod
     def process_document(file_path: str, content_type: str):
 
-        # Step 1 - Extract text
+        total_start = time.time()
+
+        # OCR / PDF
+        start = time.time()
+
         if content_type == "application/pdf":
             extracted_text = PDFService.extract_text(file_path)
 
@@ -20,16 +26,31 @@ class DocumentAIService:
         else:
             raise ValueError(f"Unsupported file type: {content_type}")
 
-        # Step 2 - Generate Summary
+        print(f"OCR/PDF Extraction : {time.time()-start:.2f} sec")
+
+        # Summary
+        start = time.time()
+
         summary = summary_service.generate_summary(extracted_text)
 
-        # Step 3 - Extract Keywords
+        print(f"Summary : {time.time()-start:.2f} sec")
+
+        # Keywords
+        start = time.time()
+
         keywords = keyword_service.extract_keywords(extracted_text)
 
-        # Step 4 - Extract Named Entities
+        print(f"Keywords : {time.time()-start:.2f} sec")
+
+        # NER
+        start = time.time()
+
         entities = ner_service.extract_entities(extracted_text)
 
-        # Step 5 - Return AI Results
+        print(f"NER : {time.time()-start:.2f} sec")
+
+        print(f"TOTAL : {time.time()-total_start:.2f} sec")
+
         return {
             "text": extracted_text,
             "summary": summary,
