@@ -5,7 +5,7 @@ from services.ocr_service import ocr_service
 from services.summary_service import summary_service
 from services.keyword_service import keyword_service
 from services.ner_service import ner_service
-
+from services.document_type_service import document_type_service
 
 class DocumentAIService:
 
@@ -51,11 +51,21 @@ class DocumentAIService:
 
         print(f"TOTAL : {time.time()-total_start:.2f} sec")
 
+        document_type = document_type_service.classify(
+            extracted_text
+        )
+
+        print(
+            f"Detected document type: {document_type}"
+        )
+
+
         return {
             "text": extracted_text,
             "summary": summary,
             "keywords": keywords,
-            "entities": entities
+            "entities": entities,
+            "document_type": document_type
         }
 
 
